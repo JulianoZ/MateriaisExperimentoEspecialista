@@ -1,0 +1,6 @@
+datatype int
+datatype string
+datatype float
+datatype void
+datatype list<E>
+datatype bool

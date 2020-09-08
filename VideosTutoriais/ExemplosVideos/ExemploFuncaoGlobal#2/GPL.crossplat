@@ -1,0 +1,139 @@
+deploy ecommerce{
+	User: Android
+	User: iOS
+	User: Web
+	
+	UserDAO: Android
+	UserDAO: iOS
+	UserDAO: Web	
+	
+}
+
+class User{
+	id: int
+	name: string
+	email: string
+	password: string
+	phone: string
+	stature: float
+	weight: float
+	
+	operation User(){
+		
+	}	
+}
+
+
+
+class UserDAO{
+	
+	usesGlobal SelectUser(): list<User>
+	
+	
+	operation imcIndication(stature: float, weight: float): float{
+		imc: float
+		imc := weight / (stature * stature)
+		return imc		
+    }   
+    
+    operation AuthenticationCli(cli: User): list<string>{
+		objCl: User
+		accessData: list<string>		
+		listObjCli: list<User>
+		listObjCli := global SelectUser()		
+		x: int
+		status: bool
+		For x=0,x<listObjCli.size,x++ {
+			objCl := listObjCli.get(x)
+			If objCl.email == cli.email && objCl.password == cli.password {	
+			   status := "true"		 
+			   accessData.add(objCli.id)
+			   accessData.add(objCli.name)
+			   accessData.add(status)					
+			}Else{
+			   status := "false"
+			   objCl.name := "Erro"		 
+			   accessData.add(objCl.name)
+			   accessData.add(status)				
+			}			
+		}
+		return accessData
+	} 
+   
+}
+
+platform Android: Java{
+	
+implementsGlobal SelectUser(): list<User>{
+	'''     List<User> listObj = new ArrayList<User>(); 
+            Connection db = Connection.getInstance(context.getApplicationContext());
+            String query = "select id, name, email from User";
+            Cursor c = db.getWritableDatabase().rawQuery(query,null);
+            if(c!=null && c.moveToFirst()){
+            	do {
+            		User obj = new User();
+            		obj.setId(Connection.getDataInt("id", c));
+            		obj.setName(Connection.getDataString("name", c));
+            		obj.setEmail(Connection.getDataString("email", c));           		
+            		listObj.add(obj);
+            	}while (c.moveToNext());
+            	c.close();
+            db.close();
+            }
+            return listObj;
+	'''
+}	
+	
+}
+	
+
+
+
+platform iOS: Swift{
+	
+implementsGlobal SelectUser(ord: string): list<User>{
+	'''     sharedInstance.database!.open()
+	        let resultSet: FMResultSet! = sharedInstance.database!.executeQuery("select id, name, email from User", withArgumentsInArray: nil)
+	        let listUser: NSMutableArray = NSMutableArray()
+	        if (resultSet != nil) {
+	        	while resultSet.next() {
+	        		let obj : User = User()
+	        		obj.id = resultSet.intForColumn("id")
+	        		obj.name = resultSet.stringForColumn("name")
+	        		obj.email = resultSet.stringForColumn("email")      		
+	        		listUser.addObject(obj)
+	        	}
+	        }
+            sharedInstance.database!.close()
+            return listUser
+	'''
+}	
+	
+	
+	
+}
+
+platform Web: CSharp{
+	
+implementsGlobal SelectUser(): list<User>{
+	'''     
+	        List<User> listObj = new List<User>(); 
+            User obj = new User();
+            Connection objCon = new   ();
+            MySqlConnection Conn = new MySqlConnection();
+            Conn = objCon.OpenConnection();
+            MySqlCommand command = Conn.CreateCommand();
+            command.CommandText = "select id, name, email from User";
+            for(Reader.Read()){
+            	obj.setId(Reader.getInt(0));
+            	obj.setName(Reader.getString(1));
+            	obj.setEmail(Reader.getString(2));             
+                listObj.add(obj);
+            }
+            return listObj;		
+	'''
+}	
+	
+
+	
+}

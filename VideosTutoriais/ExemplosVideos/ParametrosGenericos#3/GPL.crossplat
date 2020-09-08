@@ -1,0 +1,146 @@
+deploy ecommerce{
+	User: Android
+	User: iOS
+	User: Web
+	
+	UserDAO: Android
+	UserDAO: iOS
+	UserDAO: Web	
+	
+}
+
+class User{
+	id: int
+	name: string
+	email: string
+	password: string
+	phone: string
+	stature: float
+	weight: float
+	
+	operation User(){
+		
+	}	
+}
+
+
+
+class UserDAO{
+	
+	usesGlobal SelectUser(): list<User>
+	usesGlobal <User> SelectObject(ord: string): list<User>
+	
+	
+	operation imcIndication(stature: float, weight: float): float{
+		imc: float
+		imc := weight / (stature * stature)
+		return imc		
+    }   
+    
+	operation AuthenticationCli(cli: User): list<string>{
+		objCl: User
+		accessData: list<string>		
+		listObjCli: list<User>
+		ord: string
+		ord := "Order by id"
+		listObjCli := global SelectObject(ord)		
+		x: int
+		status: bool
+		For x=0,x<listObjCli.size,x++ {
+			objCl := listObjCli.get(x)
+			If objCl.email == cli.email && objCl.password == cli.password {	
+			   status := "true"		 
+			   accessData.add(objCli.id)
+			   accessData.add(objCli.name)
+			   accessData.add(status)					
+			}Else{
+			   status := "false"
+			   objCl.name := "Erro"		 
+			   accessData.add(objCl.name)
+			   accessData.add(status)				
+			}			
+		}
+		return accessData
+	}	
+
+   
+}
+
+platform Android: Java{
+	
+implementsGlobal <E> SelectObject(ord: string): list<E>{
+	'''     List<$E.name> listObj = new ArrayList<$E.name>(); 
+            Connection db = Connection.getInstance(context.getApplicationContext());
+            String query = "select #foreach($f in $E.attributes)${f.name}#if($foreach.hasNext), #end#end from $E.name " + ord";
+            Cursor c = db.getWritableDatabase().rawQuery(query,null);
+            if(c!=null && c.moveToFirst()){
+            	do {
+            		${E.name} obj = new ${E.name}();
+            		#foreach($f in $E.attributes)
+            		  obj.set${f.name.substring(0,1).toUpperCase()}${f.name.substring(1)}(Connection.getData${f.type.name.substring(0,1).toUpperCase()}${f.type.name.substring(1)}("$f.name", c));                 
+            		#end              		
+            		listObj.add(obj);
+            	}while (c.moveToNext());
+            	c.close();
+            db.close();
+            }
+            return listObj;
+	'''
+}
+	
+}
+	
+
+
+
+platform iOS: Swift{
+	
+implementsGlobal <E> SelectObject(ord: string): list<E>{
+	'''     sharedInstance.database!.open()
+	        let resultSet: FMResultSet! = sharedInstance.database!.executeQuery("SELECT #foreach($f in $E.attributes)${f.name}#if($foreach.hasNext) , #end#end from $E.name", withArgumentsInArray: nil)
+	        let list${E.name} : NSMutableArray = NSMutableArray()
+	        if (resultSet != nil) {
+	        	while resultSet.next() {
+	        		let obj : $E.name = ${E.name}()
+	        		#foreach($f in $E.attributes)
+	        		obj.${f.name} = resultSet.${f.type.name}ForColumn("${f.name}")	        		       		  
+	        		#end	        		
+	        		list${E.name}.addObject(obj)
+	        	}
+	        }
+            sharedInstance.database!.close()
+            return list${E.name}
+	'''
+}
+	
+	
+	
+}
+
+platform Web: CSharp{
+	
+implementsGlobal <E> SelectObject(ord: string): list<E>{
+	'''     
+	        List<$E.name> listObj = new List<$E.name>(); 
+            $E.name obj = new $E.name();
+            Connection objCon = new   ();
+            MySqlConnection Conn = new MySqlConnection();
+            Conn = objCon.OpenConnection();
+            MySqlCommand command = Conn.CreateCommand();
+            command.CommandText = "select #foreach($f in $E.attributes)${f.name}#if($foreach.hasNext) , #end#end from $E.name " + ord;
+            for(Reader.Read()){
+            	#set($count = 0)	
+            	#foreach($f in $E.attributes)
+            	  obj.set${f.name.substring(0,1).toUpperCase()}${f.name.substring(1)}(Reader.get${f.type.name.substring(0,1).toUpperCase()}${f.type.name.substring(1)}($count));
+            	  #set($count = $count + 1)                 
+            	#end                 
+                  listObj.add(obj)
+            }
+            return listObj;	
+	
+	'''
+}
+	
+
+	
+}

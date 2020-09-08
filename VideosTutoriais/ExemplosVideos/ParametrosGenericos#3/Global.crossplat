@@ -1,0 +1,2 @@
+global SelectUser(): list<User>
+global <E> SelectObject(ord: string): list<E> 
